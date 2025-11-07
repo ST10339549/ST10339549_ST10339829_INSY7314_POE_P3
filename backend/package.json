@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "node index.js"
+    "dev": "node index.js",
+    "test": "echo \"No backend tests defined yet\" && exit 0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

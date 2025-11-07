@@ -32,7 +32,7 @@ jobs:
       - sonarcloud/scan
           
       # 4. Wait for and check the Quality Gate Status (Security Standard)
-      - sonarcloud/wait-for-quality-gate
+      - sonarcloud/wait
 
 workflows:
   main:

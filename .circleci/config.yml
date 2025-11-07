@@ -12,10 +12,74 @@ jobs:
     steps:
       - checkout
       
-      # Run SonarCloud SAST scan with Quality Gate enforcement
-      # The scan command automatically waits for and checks the Quality Gate when configured properly
-      - sonarcloud/scan:
-          sonar_token_variable_name: SONAR_TOKEN
+      # Run SonarCloud SAST scan
+      - sonarcloud/scan
+      
+      # Wait for and enforce Quality Gate using sonar-scanner-cli
+      - run:
+          name: Wait for Quality Gate and Enforce
+          command: |
+            echo "Checking Quality Gate status..."
+            
+            # Read the task report to get the CE Task ID
+            REPORT_FILE=".scannerwork/report-task.txt"
+            
+            if [ ! -f "$REPORT_FILE" ]; then
+              echo "Error: Report file not found at $REPORT_FILE"
+              exit 1
+            fi
+            
+            # Extract the CE Task URL and server URL
+            CE_TASK_URL=$(grep ceTaskUrl "$REPORT_FILE" | cut -d'=' -f2-)
+            SERVER_URL=$(grep serverUrl "$REPORT_FILE" | cut -d'=' -f2-)
+            
+            echo "SonarCloud Server: $SERVER_URL"
+            echo "CE Task URL: $CE_TASK_URL"
+            
+            # Wait for analysis to complete and check Quality Gate
+            MAX_ATTEMPTS=60
+            ATTEMPT=0
+            
+            while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+              ATTEMPT=$((ATTEMPT + 1))
+              echo "Attempt $ATTEMPT/$MAX_ATTEMPTS: Checking analysis status..."
+              
+              # Get the analysis status
+              TASK_STATUS=$(curl -s -u "$SONAR_TOKEN:" "$CE_TASK_URL" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+              
+              echo "Task status: $TASK_STATUS"
+              
+              if [ "$TASK_STATUS" = "SUCCESS" ]; then
+                echo "✅ Analysis completed successfully"
+                
+                # Get the Quality Gate status
+                ANALYSIS_ID=$(curl -s -u "$SONAR_TOKEN:" "$CE_TASK_URL" | grep -o '"analysisId":"[^"]*"' | cut -d'"' -f4)
+                QG_STATUS=$(curl -s -u "$SONAR_TOKEN:" "${SERVER_URL}/api/qualitygates/project_status?analysisId=${ANALYSIS_ID}" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+                
+                echo "Quality Gate Status: $QG_STATUS"
+                
+                if [ "$QG_STATUS" = "OK" ]; then
+                  echo "✅ Quality Gate PASSED!"
+                  exit 0
+                elif [ "$QG_STATUS" = "ERROR" ]; then
+                  echo "❌ Quality Gate FAILED!"
+                  echo "Please check SonarCloud dashboard for details: ${SERVER_URL}/dashboard?id=$(grep projectKey "$REPORT_FILE" | cut -d'=' -f2-)"
+                  exit 1
+                else
+                  echo "⚠️  Quality Gate status: $QG_STATUS"
+                  exit 1
+                fi
+              elif [ "$TASK_STATUS" = "FAILED" ] || [ "$TASK_STATUS" = "CANCELED" ]; then
+                echo "❌ Analysis task failed with status: $TASK_STATUS"
+                exit 1
+              fi
+              
+              # Wait before next check
+              sleep 5
+            done
+            
+            echo "❌ Timeout waiting for analysis to complete"
+            exit 1
 
   # Job 2: SCA (Software Composition Analysis) using npm audit
   sca-scan:
@@ -30,13 +94,13 @@ jobs:
             - v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
             - v1-dependencies-
       
-      # Install dependencies
+      # Install dependencies (ignore scripts to avoid patch-package errors)
       - run:
           name: Install Dependencies
           command: |
-            npm install
-            npm install --prefix backend
-            npm install --prefix frontend
+            npm install --ignore-scripts
+            npm install --prefix backend --ignore-scripts
+            npm install --prefix frontend --ignore-scripts
       
       - save_cache:
           paths:
@@ -108,13 +172,13 @@ jobs:
             - v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
             - v1-dependencies-
       
-      # Install dependencies
+      # Install dependencies (ignore scripts to avoid patch-package errors)
       - run:
           name: Install Dependencies
           command: |
-            npm install
-            npm install --prefix backend
-            npm install --prefix frontend
+            npm install --ignore-scripts
+            npm install --prefix backend --ignore-scripts
+            npm install --prefix frontend --ignore-scripts
       
       - save_cache:
           paths:

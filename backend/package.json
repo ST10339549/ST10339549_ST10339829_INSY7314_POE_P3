@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "node index.js",
-    "test": "echo \"Backend security tests require running server - use 'npm run security-tests' instead\" && exit 0",
+    "test": "mocha test/*.test.js --exit",
     "security-tests": "mocha test/security-tests.js --exit",
-    "test:coverage": "nyc --reporter=lcov --reporter=text mocha test/security-tests.js --exit"
+    "test:coverage": "nyc --reporter=lcov --reporter=text mocha test/*.test.js test/security-tests.js --exit"
   },
   "nyc": {
     "all": true,
@@ -41,6 +41,7 @@
     "axios": "^1.13.2",
     "chai": "^5.3.3",
     "mocha": "^10.8.2",
-    "nyc": "^17.1.0"
+    "nyc": "^17.1.0",
+    "supertest": "^7.1.4"
   }
 }

@@ -30,10 +30,6 @@ jobs:
       
       # 3. Run the SonarCloud Scan
       - sonarcloud/scan:
-          organization: "lexiouscorp"
-          project_key: "ST10339549_INSY7314-POE-P2_LexiousCorp"
-          base_dir: "."
-          test_results_path: "coverage/lcov.info"
           
       # 4. Wait for and check the Quality Gate Status (Security Standard)
       - sonarcloud/wait-for-quality-gate

@@ -7,7 +7,17 @@ import { validationResult } from 'express-validator';
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://localhost:5173';
 
 export function applyCoreMiddleware(app) {
-    app.use(helmet());
+    // Explicit Helmet configuration with maximized HSTS security
+    // maxAge set to 31536000 seconds (1 year)
+    app.use(
+        helmet({
+            hsts: {
+                maxAge: 31536000,          // 1 year for maximum security
+                includeSubDomains: true,   // Protects all subdomains
+                preload: true              // Allows submission to HSTS preload list
+            }
+        })
+    );
     app.use(cors({ origin: CORS_ORIGIN }));
     app.use(express.json());
 

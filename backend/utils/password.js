@@ -1,6 +1,6 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
-const SALT_ROUNDS = 12; // Increased salt rounds for better security
+const SALT_ROUNDS = 12;
 
 export async function hashPassword(plainTextPassword) {
     const salt = await bcrypt.genSalt(SALT_ROUNDS);

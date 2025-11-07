@@ -9,7 +9,7 @@
     "test": "echo \"No backend tests defined yet\" && exit 0"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.2.0",

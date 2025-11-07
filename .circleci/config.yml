@@ -1,6 +1,7 @@
 version: 2.1
 
 orbs:
+  # SonarCloud orb for automated code quality and security analysis
   sonarcloud: sonarsource/sonarcloud@3.0.1
 
 jobs:

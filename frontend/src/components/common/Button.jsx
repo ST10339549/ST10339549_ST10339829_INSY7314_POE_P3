@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export default function Button({ children, type = 'button', ...props }) {
   return (
@@ -11,3 +12,8 @@ export default function Button({ children, type = 'button', ...props }) {
     </button>
   );
 }
+
+Button.propTypes = {
+  children: PropTypes.node.isRequired,
+  type: PropTypes.oneOf(['button', 'submit', 'reset']),
+};

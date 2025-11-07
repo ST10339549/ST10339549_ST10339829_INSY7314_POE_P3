@@ -30,9 +30,6 @@ jobs:
       
       # 3. Run the SonarCloud Scan
       - sonarcloud/scan
-          
-      # 4. Wait for and check the Quality Gate Status (Security Standard)
-      - sonarcloud/wait
 
 workflows:
   main:

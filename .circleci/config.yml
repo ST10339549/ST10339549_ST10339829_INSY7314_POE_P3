@@ -260,32 +260,46 @@ jobs:
       # Start backend API server
       - run:
           name: Start Backend API Server
+          background: true
           command: |
             cd backend
-            node index.js > /tmp/backend-server.log 2>&1 &
-            echo $! > /tmp/server.pid
-            echo "Backend server started with PID: $(cat /tmp/server.pid)"
-          background: true
+            node index.js > /tmp/backend-server.log 2>&1
       
       # Wait for API server to be ready
       - run:
           name: Wait for API Server to Start
           command: |
             echo "Waiting for API server to start..."
+            sleep 10
+            
+            # Verify server process is running
             for i in {1..30}; do
-              if curl -k -s https://localhost:4000 > /dev/null 2>&1; then
-                echo "✅ API server is ready!"
-                break
+              if ! pgrep -f "node index.js" > /dev/null; then
+                echo "❌ Backend process not found (attempt $i/30)"
+                if [ -f /tmp/backend-server.log ]; then
+                  echo "=== Backend Server Logs ==="
+                  cat /tmp/backend-server.log
+                fi
+                sleep 2
+                continue
+              fi
+              
+              if curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
+                echo "✅ API server is ready and responding!"
+                sleep 2
+                exit 0
               fi
               echo "⏳ Waiting for server... (attempt $i/30)"
               sleep 2
             done
             
-            # Verify server is responding
-            if ! curl -k -s https://localhost:4000 > /dev/null 2>&1; then
-              echo "❌ ERROR: API server failed to start"
+            # Final check
+            if ! curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
+              echo "❌ ERROR: API server failed to respond"
               echo "=== Backend Server Logs ==="
               cat /tmp/backend-server.log
+              echo "=== Process Status ==="
+              ps aux | grep node || echo "No node processes found"
               exit 1
             fi
       
@@ -307,18 +321,6 @@ jobs:
             fi
             
             exit $TEST_RESULT
-      
-      # Stop API server
-      - run:
-          name: Stop Backend API Server
-          command: |
-            if [ -f /tmp/server.pid ]; then
-              SERVER_PID=$(cat /tmp/server.pid)
-              echo "Stopping server with PID: $SERVER_PID"
-              kill $SERVER_PID || true
-              sleep 2
-            fi
-          when: always
       
       # Store test results and logs
       - store_artifacts:

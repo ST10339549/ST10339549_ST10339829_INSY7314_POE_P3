@@ -27,6 +27,12 @@ const MEMO_REFERENCE_PATTERN = /^[a-zA-Z0-9\s\p{P}]{0,150}$/u;
 // Currency: Strict whitelist of allowed currency codes
 const ALLOWED_CURRENCIES = ['ZAR', 'USD', 'EUR', 'GBP'];
 
+// Username: Alphanumeric only, 5-20 characters
+const USERNAME_PATTERN = /^[a-zA-Z0-9]{5,20}$/;
+
+// Payment Amount with strict limits: numeric with up to 2 decimal places, max 10000.00
+const LIMITED_PAYMENT_AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/;
+
 export const registrationValidationRules = [
     body('fullName')
         .trim()
@@ -82,6 +88,24 @@ export const paymentValidationRules = [
         .withMessage('Memo/Reference must be 0-150 characters and contain only alphanumeric characters and basic punctuation.'),
 ];
 
+export const usernameAndPaymentValidationRules = [
+    body('username')
+        .trim()
+        .matches(USERNAME_PATTERN)
+        .withMessage('Username must be alphanumeric and between 5-20 characters.'),
+    body('amount')
+        .trim()
+        .matches(LIMITED_PAYMENT_AMOUNT_PATTERN)
+        .withMessage('Payment amount must be numeric with up to 2 decimal places.')
+        .custom((value) => {
+            const numValue = Number.parseFloat(value);
+            if (Number.isNaN(numValue) || numValue <= 0 || numValue > 10000) {
+                throw new Error('Payment amount must be between 0.01 and 10000.00');
+            }
+            return true;
+        })
+];
+
 // Export patterns for potential reuse in frontend or other modules
 export const validationPatterns = {
     recipientName: RECIPIENT_NAME_PATTERN,
@@ -90,4 +114,6 @@ export const validationPatterns = {
     swiftCode: SWIFT_CODE_PATTERN,
     memoReference: MEMO_REFERENCE_PATTERN,
     allowedCurrencies: ALLOWED_CURRENCIES,
+    username: USERNAME_PATTERN,
+    limitedPaymentAmount: LIMITED_PAYMENT_AMOUNT_PATTERN,
 };

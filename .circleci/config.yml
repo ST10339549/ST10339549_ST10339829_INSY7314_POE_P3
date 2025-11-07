@@ -45,21 +45,33 @@ jobs:
             
             # Wait for server to be fully ready
             echo "Waiting for server to start..."
-            sleep 5
+            sleep 10
             
             # Verify server is running
             for i in {1..30}; do
-              if curl -k -s https://localhost:4000 > /dev/null 2>&1; then
+              # Check if process is still alive
+              if ! kill -0 $(cat /tmp/backend.pid) 2>/dev/null; then
+                echo "❌ Backend process died"
+                echo "=== Server Logs ==="
+                cat /tmp/backend.log
+                exit 1
+              fi
+              
+              # Try to connect to server
+              if curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
                 echo "✅ Server is ready and responding on https://localhost:4000"
+                sleep 2  # Give it a bit more time to fully initialize
                 exit 0
               fi
               echo "Attempt $i/30: Waiting for server..."
               sleep 2
             done
             
-            echo "❌ Server failed to start within 60 seconds"
+            echo "❌ Server failed to respond within 60 seconds"
             echo "=== Server Logs ==="
             cat /tmp/backend.log
+            echo "=== Process Status ==="
+            ps aux | grep node || true
             exit 1
       
       # Run tests with coverage
@@ -68,8 +80,15 @@ jobs:
           command: |
             cd backend
             
-            # Double-check server is responding
-            if curl -k -s https://localhost:4000 > /dev/null 2>&1; then
+            # Verify server is still running and responding
+            if ! kill -0 $(cat /tmp/backend.pid) 2>/dev/null; then
+              echo "❌ Backend process is not running"
+              echo "=== Server Logs ==="
+              cat /tmp/backend.log
+              exit 1
+            fi
+            
+            if curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
               echo "✅ Server is responding - proceeding with tests"
             else
               echo "❌ Server not responding - cannot run tests"

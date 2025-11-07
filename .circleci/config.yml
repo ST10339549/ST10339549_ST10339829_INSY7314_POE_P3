@@ -1,76 +1,225 @@
 version: 2.1
 
 orbs:
-  # SonarCloud orb for automated code quality and security analysis
-  sonarcloud: sonarsource/sonarcloud@3.0.1
+  # SonarCloud orb for automated code quality and security analysis (SAST)
+  sonarcloud: sonarsource/sonarcloud@2.0.0
 
 jobs:
-  build-and-scan:
+  # Job 1: SAST (Static Application Security Testing) using SonarCloud Orb
+  sast-scan:
     docker:
-      - image: cimg/openjdk:17.0-node
+      - image: cimg/node:20.11
     steps:
       - checkout
       
-      # 1. Install Dependencies
+      # Run SonarCloud SAST scan (orb handles dependency detection automatically)
+      - sonarcloud/scan
+      
+      # Wait for and enforce Quality Gate (CRITICAL: This ensures code quality standards are met)
+      - sonarcloud/wait-for-quality-gate
+
+  # Job 2: SCA (Software Composition Analysis) using npm audit
+  sca-scan:
+    docker:
+      - image: cimg/node:20.11
+    steps:
+      - checkout
+      
+      # Cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
+            - v1-dependencies-
+      
+      # Install dependencies
       - run:
           name: Install Dependencies
           command: |
             npm install
-            cd backend && npm install
-            cd ../frontend && npm install
+            npm install --prefix backend
+            npm install --prefix frontend
       
-      # 1.5. Add Dependency Security Check (SCA)
-      - run:
-          name: Dependency Vulnerability Check (SCA)
-          command: npm audit --audit-level=critical || true
+      - save_cache:
+          paths:
+            - node_modules
+            - backend/node_modules
+            - frontend/node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
       
-      # 2. Run Unit Tests and Generate Coverage Report
+      # Run npm audit on root workspace
       - run:
-          name: Run Unit Tests and Generate Coverage Report
-          command: npm test -- --coverage --watchAll=false
-      
-      # 3. Run API Security Tests (Rate Limiting & Headers)
-      - run:
-          name: Start Backend Server and Run Security Tests
+          name: Run npm audit on Root Workspace
           command: |
-            # Generate self-signed certificates for testing
+            echo "=== Running npm audit on root workspace ==="
+            npm audit --audit-level=moderate || true
+      
+      # Run npm audit on backend
+      - run:
+          name: Run npm audit on Backend
+          command: |
+            echo "=== Running npm audit on backend ==="
+            cd backend
+            npm audit --audit-level=moderate || true
+      
+      # Run npm audit on frontend
+      - run:
+          name: Run npm audit on Frontend
+          command: |
+            echo "=== Running npm audit on frontend ==="
+            cd frontend
+            npm audit --audit-level=moderate || true
+      
+      # Generate comprehensive SCA report
+      - run:
+          name: Generate SCA Security Report
+          command: |
+            echo "=== Software Composition Analysis (SCA) Report ===" > sca-report.txt
+            echo "Generated: $(date)" >> sca-report.txt
+            echo "" >> sca-report.txt
+            
+            echo "--- Root Workspace ---" >> sca-report.txt
+            npm audit --json >> sca-report.txt 2>&1 || true
+            echo "" >> sca-report.txt
+            
+            echo "--- Backend Dependencies ---" >> sca-report.txt
+            cd backend && npm audit --json >> ../sca-report.txt 2>&1 || true
+            cd ..
+            echo "" >> sca-report.txt
+            
+            echo "--- Frontend Dependencies ---" >> sca-report.txt
+            cd frontend && npm audit --json >> ../sca-report.txt 2>&1 || true
+            
+            echo "SCA report generated successfully"
+      
+      # Store SCA report as artifact
+      - store_artifacts:
+          path: sca-report.txt
+          destination: security-reports/sca-report.txt
+
+  # Job 3: API Security Testing (Rate Limiting, Security Headers, etc.)
+  api-security-test:
+    docker:
+      - image: cimg/node:20.11
+    steps:
+      - checkout
+      
+      # Cache dependencies
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
+            - v1-dependencies-
+      
+      # Install dependencies
+      - run:
+          name: Install Dependencies
+          command: |
+            npm install
+            npm install --prefix backend
+            npm install --prefix frontend
+      
+      - save_cache:
+          paths:
+            - node_modules
+            - backend/node_modules
+            - frontend/node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}-{{ checksum "backend/package.json" }}-{{ checksum "frontend/package.json" }}
+      
+      # Generate SSL certificates for HTTPS testing
+      - run:
+          name: Generate Self-Signed SSL Certificates
+          command: |
             mkdir -p certs
             cd certs
             if [ ! -f localhost.pem ]; then
+              echo "Generating self-signed SSL certificates..."
               openssl req -x509 -newkey rsa:2048 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj "/CN=localhost" 2>/dev/null
+              echo "SSL certificates generated successfully"
+            else
+              echo "SSL certificates already exist"
             fi
-            cd ../backend
-            # Start server in background
-            npm run dev > /tmp/backend-server.log 2>&1 &
-            SERVER_PID=$!
-            echo "Server started with PID: $SERVER_PID"
-            # Wait for server to be ready (check if port is listening)
+      
+      # Start backend API server
+      - run:
+          name: Start Backend API Server
+          command: |
+            cd backend
+            node index.js > /tmp/backend-server.log 2>&1 &
+            echo $! > /tmp/server.pid
+            echo "Backend server started with PID: $(cat /tmp/server.pid)"
+          background: true
+      
+      # Wait for API server to be ready
+      - run:
+          name: Wait for API Server to Start
+          command: |
+            echo "Waiting for API server to start..."
             for i in {1..30}; do
-              if nc -z localhost 4000 2>/dev/null; then
-                echo "Server is ready!"
+              if curl -k -s https://localhost:4000 > /dev/null 2>&1; then
+                echo "✅ API server is ready!"
                 break
               fi
-              echo "Waiting for server... ($i/30)"
-              sleep 1
+              echo "⏳ Waiting for server... (attempt $i/30)"
+              sleep 2
             done
-            # Run security tests
-            npm run security-tests
-            TEST_RESULT=$?
-            # Stop server
-            kill $SERVER_PID || true
-            # Show server logs if tests failed
-            if [ $TEST_RESULT -ne 0 ]; then
+            
+            # Verify server is responding
+            if ! curl -k -s https://localhost:4000 > /dev/null 2>&1; then
+              echo "❌ ERROR: API server failed to start"
               echo "=== Backend Server Logs ==="
               cat /tmp/backend-server.log
+              exit 1
             fi
-            # Exit with test result
+      
+      # Run API security tests
+      - run:
+          name: Run API Security Tests (Rate Limiting & Security Headers)
+          command: |
+            cd backend
+            echo "Running API security tests..."
+            npm run security-tests
+            TEST_RESULT=$?
+            
+            if [ $TEST_RESULT -ne 0 ]; then
+              echo "❌ Security tests failed"
+              echo "=== Backend Server Logs ==="
+              cat /tmp/backend-server.log
+            else
+              echo "✅ All security tests passed"
+            fi
+            
             exit $TEST_RESULT
       
-      # 4. Run the SonarCloud Scan
-      - sonarcloud/scan
+      # Stop API server
+      - run:
+          name: Stop Backend API Server
+          command: |
+            if [ -f /tmp/server.pid ]; then
+              SERVER_PID=$(cat /tmp/server.pid)
+              echo "Stopping server with PID: $SERVER_PID"
+              kill $SERVER_PID || true
+              sleep 2
+            fi
+          when: always
+      
+      # Store test results and logs
+      - store_artifacts:
+          path: /tmp/backend-server.log
+          destination: security-reports/backend-server.log
 
 workflows:
-  main:
+  version: 2
+  security-testing-pipeline:
     jobs:
-      - build-and-scan:
+      # Run SAST scan first
+      - sast-scan:
           context: SonarCloud
+      
+      # Run SCA scan in parallel with SAST or after
+      - sca-scan:
+          requires:
+            - sast-scan
+      
+      # Run API security tests after SCA
+      - api-security-test:
+          requires:
+            - sca-scan

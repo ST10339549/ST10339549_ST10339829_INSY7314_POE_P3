@@ -9,10 +9,10 @@
     "test": "mocha test/*.test.js --exit",
     "test:all": "mocha test/*.test.js test/security-tests.js --exit",
     "security-tests": "mocha test/security-tests.js --exit",
-    "test:coverage": "nyc --reporter=lcov --reporter=text mocha test/*.test.js test/security-tests.js --exit",
-    "test:coverage:unit": "nyc --reporter=lcov --reporter=text mocha test/*.test.js --exit"
+    "test:coverage": "c8 --reporter=lcov --reporter=text mocha test/*.test.js test/security-tests.js --exit",
+    "test:coverage:unit": "c8 --reporter=lcov --reporter=text mocha test/*.test.js --exit"
   },
-  "nyc": {
+  "c8": {
     "all": true,
     "include": [
       "routes/**/*.js",
@@ -22,14 +22,14 @@
     "exclude": [
       "test/**",
       "node_modules/**",
-      "coverage/**"
+      "coverage/**",
+      "data/**"
     ],
     "reporter": [
       "lcov",
       "text",
       "text-summary"
-    ],
-    "report-dir": "./coverage"
+    ]
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "axios": "^1.13.2",
+    "c8": "^10.1.3",
     "chai": "^5.3.3",
     "mocha": "^10.8.2",
     "nyc": "^17.1.0",

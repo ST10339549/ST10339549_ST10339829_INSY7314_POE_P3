@@ -29,9 +29,7 @@ jobs:
           command: npm test -- --coverage --watchAll=false
       
       # 3. Run the SonarCloud Scan
-      - sonarcloud/scan:
-          organization: "lexiouscorp"
-          project_key: "lexiouscorp_insy7314-part3"
+      - sonarcloud/scan
 
 workflows:
   main:

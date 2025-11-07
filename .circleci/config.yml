@@ -37,21 +37,23 @@ jobs:
       # Start backend server for coverage tests
       - run:
           name: Start Backend Server
+          background: true
           command: |
             cd backend
-            nohup node index.js > /tmp/backend.log 2>&1 &
-            echo $! > /tmp/backend.pid
-            echo "Backend server started with PID: $(cat /tmp/backend.pid)"
-            
-            # Wait for server to be fully ready
+            node index.js > /tmp/backend.log 2>&1
+      
+      # Wait for server to be ready
+      - run:
+          name: Wait for Backend Server
+          command: |
             echo "Waiting for server to start..."
             sleep 10
             
             # Verify server is running
             for i in {1..30}; do
-              # Check if process is still alive
-              if ! kill -0 $(cat /tmp/backend.pid) 2>/dev/null; then
-                echo "❌ Backend process died"
+              # Check if node process is running
+              if ! pgrep -f "node index.js" > /dev/null; then
+                echo "❌ Backend process not found"
                 echo "=== Server Logs ==="
                 cat /tmp/backend.log
                 exit 1
@@ -80,28 +82,17 @@ jobs:
           command: |
             cd backend
             
-            # Check if PID file exists
-            if [ ! -f /tmp/backend.pid ]; then
-              echo "❌ PID file not found - server may not have started"
-              echo "=== Server Logs ==="
-              cat /tmp/backend.log || echo "No log file found"
-              exit 1
-            fi
-            
-            BACKEND_PID=$(cat /tmp/backend.pid)
-            echo "Checking backend process (PID: $BACKEND_PID)..."
-            
-            # Verify server is still running and responding
-            if ps -p $BACKEND_PID > /dev/null 2>&1; then
-              echo "✅ Backend process is running (PID: $BACKEND_PID)"
-            else
-              echo "❌ Backend process (PID: $BACKEND_PID) is not running"
+            # Verify server is still running
+            if ! pgrep -f "node index.js" > /dev/null; then
+              echo "❌ Backend process is not running"
               echo "=== Server Logs ==="
               cat /tmp/backend.log
-              echo "=== All Node Processes ==="
+              echo "=== All Processes ==="
               ps aux | grep node || echo "No node processes found"
               exit 1
             fi
+            
+            echo "✅ Backend process is running"
             
             # Test server connectivity
             if curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
@@ -132,15 +123,6 @@ jobs:
             
             # Exit with test result (but don't fail the build if tests have issues)
             exit 0
-      
-      # Stop backend server
-      - run:
-          name: Stop Backend Server
-          command: |
-            if [ -f /tmp/backend.pid ]; then
-              kill $(cat /tmp/backend.pid) || true
-            fi
-          when: always
       
       # Run SonarCloud SAST scan
       - sonarcloud/scan

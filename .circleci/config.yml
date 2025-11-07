@@ -18,6 +18,11 @@ jobs:
           command: |
             npm install --ignore-scripts
             npm install --prefix backend --ignore-scripts
+            
+            # Rebuild bcrypt native bindings (required for password hashing)
+            cd backend
+            npm rebuild bcrypt
+            cd ..
       
       # Generate SSL certificates for backend tests
       - run:
@@ -189,6 +194,11 @@ jobs:
             npm install --ignore-scripts
             npm install --prefix backend --ignore-scripts
             npm install --prefix frontend --ignore-scripts
+            
+            # Rebuild bcrypt native bindings (required for backend)
+            cd backend
+            npm rebuild bcrypt
+            cd ..
       
       - save_cache:
           paths:
@@ -267,6 +277,11 @@ jobs:
             npm install --ignore-scripts
             npm install --prefix backend --ignore-scripts
             npm install --prefix frontend --ignore-scripts
+            
+            # Rebuild bcrypt native bindings (required for backend authentication)
+            cd backend
+            npm rebuild bcrypt
+            cd ..
       
       - save_cache:
           paths:

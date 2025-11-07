@@ -1,6 +1,11 @@
 # INSY7314 - Secure International Payments Portal
  
 **Student Numbers:** ST10339549 & ST10339829
+
+## 🔗 Project Links
+
+- **SonarCloud Dashboard:** [https://sonarcloud.io/project/overview?id=lexiouscorp_insy7314-part3](https://sonarcloud.io/project/overview?id=lexiouscorp_insy7314-part3)
+- **CircleCI Pipeline:** [https://app.circleci.com/projects/github/ST10339549/ST10339549_ST10339829_INSY7314_POE_P3](https://app.circleci.com/projects/github/ST10339549/ST10339549_ST10339829_INSY7314_POE_P3)
  
 This repository contains the source code for Part 2 of the INSY7314 Proof of Evidence. It is a secure, full-stack web application designed to simulate an international payments portal for a banking customer. The project consists of a React frontend and a Node.js/Express backend, built as a monorepo with a primary focus on security and modern development practices.
  

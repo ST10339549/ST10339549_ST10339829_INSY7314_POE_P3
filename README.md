@@ -6,8 +6,8 @@ This repository contains the source code for Part 2 of the INSY7314 Proof of Evi
  
 ## 🚀 Key Features
  
--   **User Registration:** Securely create a new customer account.
--   **User Login:** Authenticate using the created credentials.
+-   **Pre-Registered User Access:** Access restricted to pre-registered users only (no public registration).
+-   **User Login:** Authenticate using pre-assigned credentials.
 -   **International Payment Form:** Submit a new international payment with validation.
 -   **End-to-End Security:** A multi-layered security approach to protect against common web vulnerabilities.
 -   **Automated Security Scanning:** A DevSecOps pipeline to automatically analyze code for security hotspots and vulnerabilities on every commit.
@@ -30,6 +30,9 @@ Security is a core requirement of this project. The following measures have been
  
 -   **Secure HTTP Headers:**
     The `helmet` library is used to set numerous secure HTTP headers, protecting against common vulnerabilities like Clickjacking and Cross-Site Scripting (XSS).
+
+-   **No Public Registration (Task 3 Compliance):**
+    The `/api/auth/register` endpoint has been intentionally removed to prevent unauthorized account creation. All users must be pre-registered by administrators, ensuring proper identity verification and access control.
  
 ## 🛠️ Tech Stack
  
@@ -58,6 +61,26 @@ To run this project locally, follow these steps:
     Start both the backend and frontend servers concurrently.
     -   The backend will be available at `https://localhost:4000`.
     -   The frontend will be available at `https://localhost:5173`.
+
+## 👥 User Management
+
+**Important:** Public user registration has been disabled for security compliance with Task 3, Requirement 1.
+
+-   **Current State:** The application includes three pre-registered test users for demonstration purposes.
+-   **User Schema:** Each user requires: `id`, `fullName`, `idNumber`, `accountNumber`, and `password` (hashed).
+-   **Note:** In a production environment, users would be pre-registered by administrators through a secure back-office system and stored in a persistent database.
+
+### 🔑 Test User Credentials
+
+You can login with any of these pre-registered accounts:
+
+| Full Name      | ID Number       | Account Number | Password       |
+|----------------|-----------------|----------------|----------------|
+| John Doe       | 9001015009087   | 1234567890     | Customer123!   |
+| Jane Smith     | 8505125432109   | 2345678901     | TestUser456!   |
+| Alice Johnson  | 9208304567123   | 3456789012     | Banking789!    |
+
+**Note:** All passwords are securely hashed using bcrypt with 12 salt rounds before storage.
  
 ## 🔄 DevSecOps Pipeline
  

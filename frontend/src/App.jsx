@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import RegistrationForm from './components/RegistrationForm';
+// RegistrationForm removed - public registration disabled per Task 3, Requirement 1
 import LoginForm from './components/LoginForm';
 import PaymentPortal from './components/PaymentPortal';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [view, setView] = useState('register'); // 'register', 'login', 'payment'
+  const [view, setView] = useState('login'); // Only 'login' and 'payment' allowed
 
   const handleLogin = (loggedInUser) => {
     setUser(loggedInUser);
@@ -19,14 +19,12 @@ function App() {
 
   const renderView = () => {
     switch (view) {
-      case 'register':
-        return <RegistrationForm onSwitch={setView} />;
       case 'login':
-        return <LoginForm onLogin={handleLogin} onSwitch={setView} />;
+        return <LoginForm onLogin={handleLogin} />;
       case 'payment':
-        return user ? <PaymentPortal user={user} onLogout={handleLogout} /> : <LoginForm onLogin={handleLogin} onSwitch={setView} />;
+        return user ? <PaymentPortal user={user} onLogout={handleLogout} /> : <LoginForm onLogin={handleLogin} />;
       default:
-        return <RegistrationForm onSwitch={setView} />;
+        return <LoginForm onLogin={handleLogin} />;
     }
   };
 

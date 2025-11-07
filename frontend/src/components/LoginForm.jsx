@@ -5,7 +5,7 @@ import Alert from './common/Alert';
 
 const API_URL = 'https://localhost:4000/api/auth/login';
 
-export default function LoginForm({ onLogin, onSwitch }) {
+export default function LoginForm({ onLogin }) {
     const [formData, setFormData] = useState({ idNumber: '', password: '' });
     const [apiMessage, setApiMessage] = useState({ text: '', type: '' });
 
@@ -37,7 +37,7 @@ export default function LoginForm({ onLogin, onSwitch }) {
             <Input id="password" label="Password" name="password" type="password" value={formData.password} onChange={handleChange} />
             <Button type="submit">Login</Button>
             <p className="text-sm text-center text-slate-400">
-                No account? <span onClick={() => onSwitch('register')} className="font-medium text-cyan-400 hover:underline cursor-pointer">Register here</span>
+                Access is restricted to pre-registered users only.
             </p>
         </form>
     );

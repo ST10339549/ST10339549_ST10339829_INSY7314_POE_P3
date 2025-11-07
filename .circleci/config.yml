@@ -31,27 +31,40 @@ jobs:
       
       # 3. Run API Security Tests (Rate Limiting & Headers)
       - run:
-          name: Start Backend Server in Background
+          name: Start Backend Server and Run Security Tests
           command: |
-            cd backend
-            npm run dev &
-            echo $! > /tmp/backend-server.pid
-            sleep 10  # Wait for server to start
-          background: true
-      
-      - run:
-          name: Run API Security Tests
-          command: |
-            cd backend
-            npm run security-tests
-      
-      - run:
-          name: Stop Backend Server
-          command: |
-            if [ -f /tmp/backend-server.pid ]; then
-              kill $(cat /tmp/backend-server.pid) || true
+            # Generate self-signed certificates for testing
+            mkdir -p certs
+            cd certs
+            if [ ! -f localhost.pem ]; then
+              openssl req -x509 -newkey rsa:2048 -keyout localhost-key.pem -out localhost.pem -days 365 -nodes -subj "/CN=localhost" 2>/dev/null
             fi
-          when: always
+            cd ../backend
+            # Start server in background
+            npm run dev > /tmp/backend-server.log 2>&1 &
+            SERVER_PID=$!
+            echo "Server started with PID: $SERVER_PID"
+            # Wait for server to be ready (check if port is listening)
+            for i in {1..30}; do
+              if nc -z localhost 4000 2>/dev/null; then
+                echo "Server is ready!"
+                break
+              fi
+              echo "Waiting for server... ($i/30)"
+              sleep 1
+            done
+            # Run security tests
+            npm run security-tests
+            TEST_RESULT=$?
+            # Stop server
+            kill $SERVER_PID || true
+            # Show server logs if tests failed
+            if [ $TEST_RESULT -ne 0 ]; then
+              echo "=== Backend Server Logs ==="
+              cat /tmp/backend-server.log
+            fi
+            # Exit with test result
+            exit $TEST_RESULT
       
       # 4. Run the SonarCloud Scan
       - sonarcloud/scan

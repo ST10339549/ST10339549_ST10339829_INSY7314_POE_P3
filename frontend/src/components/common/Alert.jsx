@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 export default function Alert({ message, type }) {
   if (!message) return null;
@@ -14,3 +15,8 @@ export default function Alert({ message, type }) {
     </div>
   );
 }
+
+Alert.propTypes = {
+  message: PropTypes.string,
+  type: PropTypes.oneOf(['success', 'error']),
+};

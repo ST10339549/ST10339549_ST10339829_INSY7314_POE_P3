@@ -7,7 +7,27 @@
   "scripts": {
     "dev": "node index.js",
     "test": "echo \"Backend security tests require running server - use 'npm run security-tests' instead\" && exit 0",
-    "security-tests": "mocha test/security-tests.js --exit"
+    "security-tests": "mocha test/security-tests.js --exit",
+    "test:coverage": "nyc --reporter=lcov --reporter=text mocha test/security-tests.js --exit"
+  },
+  "nyc": {
+    "all": true,
+    "include": [
+      "routes/**/*.js",
+      "middleware/**/*.js",
+      "utils/**/*.js"
+    ],
+    "exclude": [
+      "test/**",
+      "node_modules/**",
+      "coverage/**"
+    ],
+    "reporter": [
+      "lcov",
+      "text",
+      "text-summary"
+    ],
+    "report-dir": "./coverage"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -20,6 +40,7 @@
   "devDependencies": {
     "axios": "^1.13.2",
     "chai": "^5.3.3",
-    "mocha": "^10.8.2"
+    "mocha": "^10.8.2",
+    "nyc": "^17.1.0"
   }
 }

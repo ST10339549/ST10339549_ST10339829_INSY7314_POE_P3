@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Input from './common/Input';
 import Button from './common/Button';
 import Alert from './common/Alert';
@@ -156,8 +157,19 @@ export default function RegistrationForm({ onSwitch }) {
             
             <Button type="submit">Register</Button>
             <p className="text-sm text-center text-slate-400">
-                Already have an account? <span onClick={() => onSwitch('login')} className="font-medium text-cyan-400 hover:underline cursor-pointer">Login here</span>
+                Already have an account?{' '}
+                <button 
+                    type="button"
+                    onClick={() => onSwitch('login')} 
+                    className="font-medium text-cyan-400 hover:underline cursor-pointer bg-transparent border-none p-0"
+                >
+                    Login here
+                </button>
             </p>
         </form>
     );
 }
+
+RegistrationForm.propTypes = {
+    onSwitch: PropTypes.func.isRequired,
+};

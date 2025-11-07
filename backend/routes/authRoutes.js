@@ -34,7 +34,9 @@ const users = [
 
 // Debug: Log users on startup
 console.log('🔐 Pre-registered users loaded:', users.length);
-users.forEach(u => console.log(`   - ${u.fullName} (ID: ${u.idNumber})`));
+for (const u of users) {
+    console.log(`   - ${u.fullName} (ID: ${u.idNumber})`);
+}
 
 router.post('/login', async (req, res, next) => {
      try {

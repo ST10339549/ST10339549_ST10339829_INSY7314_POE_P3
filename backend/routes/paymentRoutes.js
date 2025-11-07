@@ -11,7 +11,6 @@ router.post('/', paymentValidationRules, handleValidationErrors, (req, res, next
     try {
         const newTransaction = { ...req.body, transactionId: Date.now(), status: 'Pending' };
         transactions.push(newTransaction);
-        console.log('Transactions:', transactions);
         res.status(200).json({ message: 'Payment submitted for processing.', transaction: newTransaction });
     } catch (error) {
         next(error);

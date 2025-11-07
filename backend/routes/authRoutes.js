@@ -32,27 +32,16 @@ const users = [
 // SECURITY NOTE: /register route intentionally removed to prevent unauthorized user creation
 // Users must be pre-registered by administrators only
 
-// Debug: Log users on startup
-console.log('🔐 Pre-registered users loaded:', users.length);
-for (const u of users) {
-    console.log(`   - ${u.fullName} (ID: ${u.idNumber})`);
-}
-
 router.post('/login', async (req, res, next) => {
      try {
         const { idNumber, password } = req.body;
-        console.log('🔍 Login attempt - ID Number:', idNumber);
-        console.log('🔍 Available users:', users.map(u => u.idNumber));
         
         const user = users.find(u => u.idNumber === idNumber);
         if (!user) {
-            console.log('❌ User not found with ID:', idNumber);
             return res.status(404).json({ message: 'User not found.' });
         }
         
-        console.log('✅ User found:', user.fullName);
         const isMatch = await comparePassword(password, user.password);
-        console.log('🔐 Password match:', isMatch);
         
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials.' });

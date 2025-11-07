@@ -1,8 +1,8 @@
 import express from 'express';
-import https from 'https';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import https from 'node:https';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { applyCoreMiddleware } from './middleware/security.js';
 import authRoutes from './routes/authRoutes.js';

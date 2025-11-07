@@ -12,11 +12,10 @@ jobs:
     steps:
       - checkout
       
-      # Run SonarCloud SAST scan (orb handles dependency detection automatically)
-      - sonarcloud/scan
-      
-      # Wait for and enforce Quality Gate (CRITICAL: This ensures code quality standards are met)
-      - sonarcloud/wait-for-quality-gate
+      # Run SonarCloud SAST scan with Quality Gate enforcement
+      # The scan command automatically waits for and checks the Quality Gate when configured properly
+      - sonarcloud/scan:
+          sonar_token_variable_name: SONAR_TOKEN
 
   # Job 2: SCA (Software Composition Analysis) using npm audit
   sca-scan:

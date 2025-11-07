@@ -17,4 +17,12 @@ router.post('/', paymentValidationRules, handleValidationErrors, (req, res, next
     }
 });
 
+router.get('/', (req, res) => {
+    res.status(200).json({ 
+        message: 'Transaction history retrieved.', 
+        transactions,
+        count: transactions.length 
+    });
+});
+
 export default router;

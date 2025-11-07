@@ -1,0 +1,45 @@
+version: 2.1
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
+jobs:
+  build-and-scan:
+    docker:
+      - image: cimg/openjdk:17.0-node
+    steps:
+      - checkout
+      
+      # 1. Install Dependencies
+      - run:
+          name: Install Dependencies
+          command: |
+            npm install
+            cd backend && npm install
+            cd ../frontend && npm install
+      
+      # 1.5. Add Dependency Security Check (SCA)
+      - run:
+          name: Dependency Vulnerability Check (SCA)
+          command: npm audit --audit-level=critical || true
+      
+      # 2. Run Unit Tests and Generate Coverage Report
+      - run:
+          name: Run Unit Tests and Generate Coverage Report
+          command: npm test -- --coverage --watchAll=false
+      
+      # 3. Run the SonarCloud Scan
+      - sonarcloud/with-test-reporting:
+          organization: "lexiouscorp"
+          project_key: "ST10339549_INSY7314-POE-P2_LexiousCorp"
+          base_dir: "."
+          test_results_path: "coverage/lcov.info"
+      
+      # 4. Wait for and check the Quality Gate Status (Security Standard)
+      - sonarcloud/wait-for-quality-gate
+
+workflows:
+  main:
+    jobs:
+      - build-and-scan:
+          context: SonarCloud

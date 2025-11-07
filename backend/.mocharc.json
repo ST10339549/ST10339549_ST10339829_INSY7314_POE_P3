@@ -1,0 +1,8 @@
+{
+  "spec": "test/**/*.js",
+  "timeout": 30000,
+  "slow": 5000,
+  "ui": "bdd",
+  "color": true,
+  "exit": true
+}

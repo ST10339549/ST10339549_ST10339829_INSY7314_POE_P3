@@ -29,7 +29,31 @@ jobs:
           name: Run Unit Tests and Generate Coverage Report
           command: npm test -- --coverage --watchAll=false
       
-      # 3. Run the SonarCloud Scan
+      # 3. Run API Security Tests (Rate Limiting & Headers)
+      - run:
+          name: Start Backend Server in Background
+          command: |
+            cd backend
+            npm run dev &
+            echo $! > /tmp/backend-server.pid
+            sleep 10  # Wait for server to start
+          background: true
+      
+      - run:
+          name: Run API Security Tests
+          command: |
+            cd backend
+            npm run security-tests
+      
+      - run:
+          name: Stop Backend Server
+          command: |
+            if [ -f /tmp/backend-server.pid ]; then
+              kill $(cat /tmp/backend-server.pid) || true
+            fi
+          when: always
+      
+      # 4. Run the SonarCloud Scan
       - sonarcloud/scan
 
 workflows:

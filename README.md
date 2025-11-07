@@ -84,9 +84,29 @@ You can login with any of these pre-registered accounts:
  
 ## 🔄 DevSecOps Pipeline
  
-This project includes a DevSecOps pipeline configured in `.circleci/config.yml`.
+This project includes a comprehensive DevSecOps pipeline configured in `.circleci/config.yml`.
  
 -   **Trigger:** The pipeline is automatically triggered on every `git push` to the `main` branch.
--   **Process:** It uses CircleCI to check out the code, install all dependencies, and then run a comprehensive security and quality scan using SonarCloud.
+-   **Pipeline Stages:**
+    1. **Dependency Installation** - Installs all project dependencies
+    2. **SCA (Software Composition Analysis)** - `npm audit` for dependency vulnerability scanning
+    3. **Unit Tests** - Runs frontend and backend test suites with coverage reports
+    4. **API Security Tests** - Validates rate limiting and security headers (NEW)
+    5. **SAST (Static Application Security Testing)** - SonarCloud comprehensive security scan
 -   **Purpose:** This ensures that all code is continuously analyzed for security vulnerabilities, code smells, and bugs, adhering to modern DevSecOps best practices.
+
+### 🧪 API Security Testing
+
+The pipeline now includes automated security tests that verify:
+- **Rate Limiting Defense:** Confirms `express-rate-limit` blocks excessive requests (429 status)
+- **Security Headers:** Validates all Helmet security headers are present and correctly configured
+- **HTTPS Enforcement:** Ensures the API only accepts secure connections
+
+To run security tests locally:
+```bash
+cd backend
+npm run security-tests
+```
+
+See `backend/test/README.md` for detailed test documentation.
  

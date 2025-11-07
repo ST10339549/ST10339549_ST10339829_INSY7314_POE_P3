@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "node index.js",
-    "test": "echo \"No backend tests defined yet\" && exit 0"
+    "test": "mocha test/security-tests.js --exit",
+    "security-tests": "mocha test/security-tests.js --exit"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
@@ -15,5 +16,10 @@
     "express-rate-limit": "^7.2.0",
     "express-validator": "^7.0.1",
     "helmet": "^7.1.0"
+  },
+  "devDependencies": {
+    "axios": "^1.13.2",
+    "chai": "^5.3.3",
+    "mocha": "^10.8.2"
   }
 }

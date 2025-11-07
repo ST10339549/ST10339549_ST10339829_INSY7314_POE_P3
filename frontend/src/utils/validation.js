@@ -61,7 +61,7 @@ export const validatePaymentAmount = (amount) => {
             error: 'Amount must be a valid number with up to 2 decimal places (e.g., 1234.56).' 
         };
     }
-    const numericAmount = parseFloat(amount);
+    const numericAmount = Number.parseFloat(amount);
     if (numericAmount <= 0) {
         return { isValid: false, error: 'Amount must be greater than zero.' };
     }

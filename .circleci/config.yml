@@ -80,20 +80,38 @@ jobs:
           command: |
             cd backend
             
-            # Verify server is still running and responding
-            if ! kill -0 $(cat /tmp/backend.pid) 2>/dev/null; then
-              echo "❌ Backend process is not running"
+            # Check if PID file exists
+            if [ ! -f /tmp/backend.pid ]; then
+              echo "❌ PID file not found - server may not have started"
               echo "=== Server Logs ==="
-              cat /tmp/backend.log
+              cat /tmp/backend.log || echo "No log file found"
               exit 1
             fi
             
+            BACKEND_PID=$(cat /tmp/backend.pid)
+            echo "Checking backend process (PID: $BACKEND_PID)..."
+            
+            # Verify server is still running and responding
+            if ps -p $BACKEND_PID > /dev/null 2>&1; then
+              echo "✅ Backend process is running (PID: $BACKEND_PID)"
+            else
+              echo "❌ Backend process (PID: $BACKEND_PID) is not running"
+              echo "=== Server Logs ==="
+              cat /tmp/backend.log
+              echo "=== All Node Processes ==="
+              ps aux | grep node || echo "No node processes found"
+              exit 1
+            fi
+            
+            # Test server connectivity
             if curl -k -s --max-time 5 https://localhost:4000 > /dev/null 2>&1; then
               echo "✅ Server is responding - proceeding with tests"
             else
               echo "❌ Server not responding - cannot run tests"
               echo "=== Server Logs ==="
               cat /tmp/backend.log
+              echo "=== Network Status ==="
+              netstat -tlnp 2>/dev/null | grep 4000 || echo "Port 4000 not listening"
               exit 1
             fi
             

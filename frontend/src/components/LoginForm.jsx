@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Input from './common/Input';
 import Button from './common/Button';
 import Alert from './common/Alert';
@@ -42,3 +43,7 @@ export default function LoginForm({ onLogin }) {
         </form>
     );
 }
+
+LoginForm.propTypes = {
+    onLogin: PropTypes.func.isRequired,
+};

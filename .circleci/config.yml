@@ -29,7 +29,7 @@ jobs:
           command: npm test -- --coverage --watchAll=false
       
       # 3. Run the SonarCloud Scan
-      - sonarcloud/scan:
+      - sonarcloud/scan
           
       # 4. Wait for and check the Quality Gate Status (Security Standard)
       - sonarcloud/wait-for-quality-gate

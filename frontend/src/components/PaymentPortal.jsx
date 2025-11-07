@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import Input from './common/Input';
 import Button from './common/Button';
 import Alert from './common/Alert';
@@ -169,3 +170,10 @@ export default function PaymentPortal({ user, onLogout }) {
         </div>
     );
 }
+
+PaymentPortal.propTypes = {
+    user: PropTypes.shape({
+        fullName: PropTypes.string.isRequired,
+    }).isRequired,
+    onLogout: PropTypes.func.isRequired,
+};

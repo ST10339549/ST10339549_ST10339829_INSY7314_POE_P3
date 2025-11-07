@@ -1,0 +1,25 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "john.doe",
+      "hashedPassword": "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYIr8D6P3hC",
+      "email": "john.doe@example.com",
+      "role": "employee"
+    },
+    {
+      "id": 2,
+      "username": "jane.smith",
+      "hashedPassword": "$2b$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+      "email": "jane.smith@example.com",
+      "role": "employee"
+    },
+    {
+      "id": 3,
+      "username": "admin.user",
+      "hashedPassword": "$2b$12$K3khyejU755UdpdBx7P2duAFtOlJmjqE0z.JqaZzEUqMKvB4VGL8i",
+      "email": "admin@example.com",
+      "role": "admin"
+    }
+  ]
+}
